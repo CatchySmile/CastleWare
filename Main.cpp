@@ -151,15 +151,14 @@ void maintainFOV(HANDLE processHandle, DWORD address, float value, bool& fovEnab
     }
 }
 
-// maintain the Fast Menu value in memory
-void maintainFastMenu(HANDLE processHandle, DWORD baseAddress, const std::vector<DWORD>& offsets, bool& fastMenuEnabled) {
-    DWORD address = getAddressWithOffsets(processHandle, baseAddress, offsets);
+void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled) {
     int zeroValue = 0;
     while (fastMenuEnabled) {
         WriteProcessMemory(processHandle, (LPVOID)(address), &zeroValue, sizeof(zeroValue), 0);
         Sleep(100);
     }
 }
+
 
 // display addresses and offsets
 void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAddress) {
@@ -185,8 +184,8 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |           Fast Menu           |
 +-------------------------------+
 )";
-    std::cout << "Address: 0x00175EE1C" << std::endl;
-    std::cout << "Offsets: { 0x16C }" << std::endl;
+    std::cout << "Address: Cubic.exe" << std::endl;
+    std::cout << "Offsets: { 0x00C7EF88 }" << std::endl;
 }
 
 int main() {
@@ -280,8 +279,8 @@ int main() {
         if (GetAsyncKeyState(VK_F3)) {
             fastMenuEnabled = !fastMenuEnabled;
             if (fastMenuEnabled) {
-                std::vector<DWORD> fastMenuOffsets{ 0x16C };
-                fastMenuThread = std::thread(maintainFastMenu, processHandle, 0x00175EE1C, fastMenuOffsets, std::ref(fastMenuEnabled));
+                DWORD fastMenuAddress = gameBaseAddress + 0x00C7EF88;
+                fastMenuThread = std::thread(maintainFastMenu, processHandle, fastMenuAddress, std::ref(fastMenuEnabled));
                 fastMenuThread.detach();
                 std::cout << "Fast Menu enabled" << std::endl;
             }
