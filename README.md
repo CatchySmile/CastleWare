@@ -47,7 +47,9 @@ An external cheat for the game Cubic Castles.
 
 ## Reporting Issues
 
-If you encounter any errors or issues, please report them at [https://github.com/CatchySmile/AssaultCubeTrainer](https://github.com/CatchySmile/AssaultCubeTrainer).
+If you encounter any errors or issues, please report them at [https://github.com/CatchySmile/CastleWare](https://github.com/CatchySmile/CastleWare)
+
+.
 
 ## Contributing
 
