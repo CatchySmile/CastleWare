@@ -14,7 +14,6 @@ An external cheat for the game Cubic Castles.
 - [Reporting Issues](#reporting-issues)
 - [Contributing](#contributing)
 - [License](#license)
-- [Acknowledgements](#acknowledgements)
 
 ## Features
 
