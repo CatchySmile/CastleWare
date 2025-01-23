@@ -2,7 +2,7 @@
 
 The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/c9eb1b51-5a2e-4e69-9553-47d93f4d5a4a)
+![image](https://github.com/user-attachments/assets/3e6347cc-914b-4397-99b3-d43ffd67b283)
 
 ## Table of Contents
 
