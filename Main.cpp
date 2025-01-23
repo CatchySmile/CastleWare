@@ -175,10 +175,12 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
     std::cout << "Last updated January 22nd, 2025" << std::endl;
 
     std::cout << R"(
++---   SCROLL FOR MORE INFO  ---+
 +-------------------------------+
 |              FOV              |
 +-------------------------------+
 )";
+    std::cout << "Description: Simple fov changer, what did you expect?" << std::endl;
     std::cout << "Base Offset: 0x002F7A30" << std::endl;
     std::cout << "Offsets: { 0x30, 0x38, 0x298, 0x264, 0x10C, 0x3C, 0x4F4 }" << std::endl;
 
@@ -187,6 +189,7 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |        Jump Potential         |
 +-------------------------------+
 )";
+    std::cout << "Description: Infinite jump works by freezing our jump potential allowing infinite jumps." << std::endl;
     std::cout << "Base Offset: 0x002FFE34" << std::endl;
     std::cout << "Offsets: { 0x19C, 0x1D8, 0x1AC, 0x1A4, 0x198, 0x34C, 0x478 }" << std::endl;
     std::cout << R"(
@@ -194,6 +197,7 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |           Fast Menu           |
 +-------------------------------+
 )";
+    std::cout << "Description: No delay to open menus or chat after realm switches." << std::endl;
     std::cout << "Address: Cubic.exe" << std::endl;
     std::cout << "Offsets: { 0x00C7EF88 }" << std::endl;
     std::cout << R"(
@@ -201,8 +205,10 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |           Name Hide           |
 +-------------------------------+
 )";
+    std::cout << "Description: Automatically hide your name when entering a new realm." << std::endl;
     std::cout << "Address: Cubic.exe" << std::endl;
     std::cout << "Offsets: { 0x1C00448 }" << std::endl;
+
 }
 
 // reload addresses and offsets
