@@ -5,6 +5,7 @@
 #include <vector>
 #include <fstream>
 #include <thread>
+#include "offsets.h" // Include the new header file
 
 // get the base address of a module
 DWORD GetModuleBaseAddress(TCHAR* lpszModuleName, DWORD pID) {
@@ -34,21 +35,16 @@ DWORD getAddressWithOffsets(HANDLE processHandle, DWORD baseAddress, const std::
     return address + offsets.back();
 }
 
-// reload addresses and offsets
-void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress) {
-    // FOV offset
-    DWORD offsetGameToBaseAdress = 0x002F7A30;
-    std::vector<DWORD> pointsOffsets{ 0x30, 0x38, 0x298, 0x264, 0x10C, 0x3C, 0x4F4 };
-    DWORD baseAddress = NULL;
-    ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAdress), &baseAddress, sizeof(baseAddress), NULL);
-    pointsAddress = getAddressWithOffsets(processHandle, baseAddress, pointsOffsets);
+void injectMemory(HANDLE processHandle, DWORD baseAddress, bool& injectEnabled) {
+    DWORD injectionAddress = baseAddress + hideNameOffset;
 
-    // Jump offset
-    DWORD offsetGameToBaseAdress2 = 0x002FFE34;
-    std::vector<DWORD> customOffsets{ 0x19C, 0x1D8, 0x1AC, 0x1A4, 0x198, 0x34C, 0x478 };
-    DWORD baseAddress2 = NULL;
-    ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAdress2), &baseAddress2, sizeof(baseAddress2), NULL);
-    customAddress = getAddressWithOffsets(processHandle, baseAddress2, customOffsets);
+    while (injectEnabled) {
+        WriteProcessMemory(processHandle, (LPVOID)(injectionAddress), injectedHideNameBytes, sizeof(injectedHideNameBytes), 0);
+        Sleep(100);
+    }
+
+    // Restore original bytes when disabled
+    WriteProcessMemory(processHandle, (LPVOID)(injectionAddress), originalHideNameBytes, sizeof(originalHideNameBytes), 0);
 }
 
 // Unused footer
@@ -80,11 +76,10 @@ Created by https://github.com/CatchySmile
 )";
     Sleep(2000);
     system("cls");
-
 }
 
 // display the menu
-void displayMenu(bool freezeEnabled, bool fovEnabled, bool fastMenuEnabled, float currentFOV) {
+void displayMenu(bool freezeEnabled, bool fovEnabled, bool fastMenuEnabled, bool hideNameEnabled, float currentFOV) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO consoleInfo;
     WORD saved_attributes;
@@ -94,7 +89,7 @@ void displayMenu(bool freezeEnabled, bool fovEnabled, bool fastMenuEnabled, floa
     saved_attributes = consoleInfo.wAttributes;
     std::cout << R"(
 +----------------+----+
-|   CastleWare   |v0.1|
+|   CastleWare   |v1.0|
 +----------------+----+
 FOV & Infinite Jump must be re-enabled after switching realms.
 )";
@@ -127,6 +122,15 @@ FOV & Infinite Jump must be re-enabled after switching realms.
         std::cout << "| Fast Menus     | F3 | [Disabled]" << std::endl;
     }
 
+    if (hideNameEnabled) {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+        std::cout << "| Hide Name      | F4 | [Enabled]" << std::endl;
+    }
+    else {
+        SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY);
+        std::cout << "| Hide Name      | F4 | [Disabled]" << std::endl;
+    }
+
     // Restore original attributes
     SetConsoleTextAttribute(hConsole, saved_attributes);
     std::cout << "+----------------+----+" << std::endl;
@@ -135,8 +139,14 @@ FOV & Infinite Jump must be re-enabled after switching realms.
     std::cout << "+----------------+----+" << std::endl;
 }
 
-// freeze a value in memory
+// jump value freeze
 void freezeValue(HANDLE processHandle, DWORD address, int value, bool& freeze) {
+    if (freeze) {
+        freeze = false;
+        Sleep(100);
+        freeze = true;
+    }
+
     while (freeze) {
         WriteProcessMemory(processHandle, (LPVOID)(address), &value, sizeof(value), 0);
         Sleep(100);
@@ -151,6 +161,7 @@ void maintainFOV(HANDLE processHandle, DWORD address, float value, bool& fovEnab
     }
 }
 
+// maintain the fast menu value in memory
 void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled) {
     int zeroValue = 0;
     while (fastMenuEnabled) {
@@ -159,10 +170,9 @@ void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled
     }
 }
 
-
 // display addresses and offsets
 void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAddress) {
-    std::cout << "Last updated January 18th, 2025" << std::endl;
+    std::cout << "Last updated January 22nd, 2025" << std::endl;
 
     std::cout << R"(
 +-------------------------------+
@@ -186,6 +196,32 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 )";
     std::cout << "Address: Cubic.exe" << std::endl;
     std::cout << "Offsets: { 0x00C7EF88 }" << std::endl;
+    std::cout << R"(
++-------------------------------+
+|           Name Hide           |
++-------------------------------+
+)";
+    std::cout << "Address: Cubic.exe" << std::endl;
+    std::cout << "Offsets: { 0x1C00448 }" << std::endl;
+}
+
+// reload addresses and offsets
+void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress, bool& freeze, std::thread& freezeThread) {
+    DWORD baseAddress = NULL;
+    ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressFOV), &baseAddress, sizeof(baseAddress), NULL);
+    pointsAddress = getAddressWithOffsets(processHandle, baseAddress, pointsOffsets);
+
+    DWORD baseAddress2 = NULL;
+    ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressJump), &baseAddress2, sizeof(baseAddress2), NULL);
+    customAddress = getAddressWithOffsets(processHandle, baseAddress2, customOffsets);
+
+    if (freeze) {
+        if (freezeThread.joinable()) {
+            freezeThread.join();
+        }
+        freezeThread = std::thread(freezeValue, processHandle, customAddress, 6400, std::ref(freeze));
+        freezeThread.detach();
+    }
 }
 
 int main() {
@@ -216,18 +252,20 @@ int main() {
 
     DWORD pointsAddress = NULL;
     DWORD customAddress = NULL;
-    reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress);
-
     bool freeze = false;
     bool fovEnabled = false;
     bool fastMenuEnabled = false;
+    bool injectEnabled = false;
+    bool hideNameEnabled = false;
     float desiredFOV = 0.0f;
     int freezeValueToSet = 6400;
     std::thread freezeThread;
     std::thread fovThread;
     std::thread fastMenuThread;
+    std::thread injectThread;
 
-    displayMenu(freeze, fovEnabled, fastMenuEnabled, desiredFOV);
+    reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress, freeze, freezeThread);
+    displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
 
     while (true) {
         Sleep(50);
@@ -241,12 +279,14 @@ int main() {
             Sleep(40);
             fastMenuThread.detach();
             Sleep(40);
+            injectThread.detach();
+            Sleep(40);
             break;
         }
         if (GetAsyncKeyState(VK_F1)) {
             fovEnabled = !fovEnabled;
             if (fovEnabled) {
-                reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress);
+                reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress, freeze, freezeThread);
                 std::cout << "Enter desired FOV: ";
                 std::cin >> desiredFOV;
                 WriteProcessMemory(processHandle, (LPVOID)(pointsAddress), &desiredFOV, sizeof(desiredFOV), 0);
@@ -259,14 +299,12 @@ int main() {
             }
             Sleep(700);
             system("cls");
-            displayMenu(freeze, fovEnabled, fastMenuEnabled, desiredFOV);
+            displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
         }
         if (GetAsyncKeyState(VK_F2)) {
             freeze = !freeze;
             if (freeze) {
-                reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress);
-                freezeThread = std::thread(freezeValue, processHandle, customAddress, freezeValueToSet, std::ref(freeze));
-                freezeThread.detach();
+                reloadAddresses(processHandle, gameBaseAddress, pointsAddress, customAddress, freeze, freezeThread);
                 std::cout << "Enabled infinite jump" << std::endl;
             }
             else {
@@ -274,12 +312,12 @@ int main() {
             }
             Sleep(700);
             system("cls");
-            displayMenu(freeze, fovEnabled, fastMenuEnabled, desiredFOV);
+            displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
         }
         if (GetAsyncKeyState(VK_F3)) {
             fastMenuEnabled = !fastMenuEnabled;
             if (fastMenuEnabled) {
-                DWORD fastMenuAddress = gameBaseAddress + 0x00C7EF88;
+                DWORD fastMenuAddress = gameBaseAddress + fastMenuOffset;
                 fastMenuThread = std::thread(maintainFastMenu, processHandle, fastMenuAddress, std::ref(fastMenuEnabled));
                 fastMenuThread.detach();
                 std::cout << "Fast Menu enabled" << std::endl;
@@ -289,20 +327,38 @@ int main() {
             }
             Sleep(700);
             system("cls");
-            displayMenu(freeze, fovEnabled, fastMenuEnabled, desiredFOV);
+            displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
         }
+        if (GetAsyncKeyState(VK_F4)) {
+            hideNameEnabled = !hideNameEnabled;
+            injectEnabled = hideNameEnabled;
+            if (injectEnabled) {
+                injectThread = std::thread(injectMemory, processHandle, gameBaseAddress, std::ref(injectEnabled));
+                injectThread.detach();
+                std::cout << "Hide Name Enabled" << std::endl;
+            }
+            else {
+                std::cout << "Hide Name Disabled" << std::endl;
+            }
+            Sleep(700);
+            system("cls");
+            displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
+        }
+
         if (GetAsyncKeyState(VK_F7)) {
             system("cls");
             displayAddresses(gameBaseAddress, pointsAddress, customAddress);
             Sleep(4500);
             system("cls");
-            displayMenu(freeze, fovEnabled, fastMenuEnabled, desiredFOV);
+            displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
         }
     }
 
     freeze = false;
     fovEnabled = false;
     fastMenuEnabled = false;
+    injectEnabled = false;
+    hideNameEnabled = false;
     if (freezeThread.joinable()) {
         freezeThread.join();
     }
@@ -311,6 +367,9 @@ int main() {
     }
     if (fastMenuThread.joinable()) {
         fastMenuThread.join();
+    }
+    if (injectThread.joinable()) {
+        injectThread.join();
     }
 
     logFile.close();
