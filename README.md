@@ -1,8 +1,8 @@
 # CastleWare - Cubic Castles External Cheat.
 
-An external cheat for the game Cubic Castles.
+The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/3d134dca-36a0-4136-b0ba-ce348c041471)
+[Preview](https://i.ibb.co/9cVX7sW/image.png)
 
 ## Table of Contents
 
