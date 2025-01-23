@@ -139,19 +139,6 @@ FOV & Infinite Jump must be re-enabled after switching realms.
     std::cout << "+----------------+----+" << std::endl;
 }
 
-// jump value freeze
-void freezeValue(HANDLE processHandle, DWORD address, int value, bool& freeze) {
-    if (freeze) {
-        freeze = false;
-        Sleep(100);
-        freeze = true;
-    }
-
-    while (freeze) {
-        WriteProcessMemory(processHandle, (LPVOID)(address), &value, sizeof(value), 0);
-        Sleep(100);
-    }
-}
 
 // maintain the FOV value in memory
 void maintainFOV(HANDLE processHandle, DWORD address, float value, bool& fovEnabled) {
@@ -190,6 +177,7 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 +-------------------------------+
 )";
     std::cout << "Description: Infinite jump works by freezing our jump potential allowing infinite jumps." << std::endl;
+    std::cout << "YOU MAY NEED TO DISABLE/ENABLE MULTIPLE TIMES TO MAKE INFINITE JUMP WORK" << std::endl;
     std::cout << "Base Offset: 0x002FFE34" << std::endl;
     std::cout << "Offsets: { 0x19C, 0x1D8, 0x1AC, 0x1A4, 0x198, 0x34C, 0x478 }" << std::endl;
     std::cout << R"(
@@ -211,6 +199,23 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 
 }
 
+// jump value freeze
+void freezeValue(HANDLE processHandle, DWORD baseAddress, const std::vector<DWORD>& offsets, int value, bool& freeze) {
+    DWORD address = getAddressWithOffsets(processHandle, baseAddress, offsets);
+    int currentValue = 0;
+
+    while (freeze) {
+        if (ReadProcessMemory(processHandle, (LPVOID)(address), &currentValue, sizeof(currentValue), NULL) && currentValue != 0) {
+            WriteProcessMemory(processHandle, (LPVOID)(address), &value, sizeof(value), 0);
+        }
+        else {
+            // Wait for the value to become valid again
+            Sleep(100);
+            address = getAddressWithOffsets(processHandle, baseAddress, offsets);
+        }
+    }
+}
+
 // reload addresses and offsets
 void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress, bool& freeze, std::thread& freezeThread) {
     DWORD baseAddress = NULL;
@@ -225,7 +230,7 @@ void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsA
         if (freezeThread.joinable()) {
             freezeThread.join();
         }
-        freezeThread = std::thread(freezeValue, processHandle, customAddress, 6400, std::ref(freeze));
+        freezeThread = std::thread(freezeValue, processHandle, baseAddress2, customOffsets, 6400, std::ref(freeze));
         freezeThread.detach();
     }
 }
@@ -354,7 +359,7 @@ int main() {
         if (GetAsyncKeyState(VK_F7)) {
             system("cls");
             displayAddresses(gameBaseAddress, pointsAddress, customAddress);
-            Sleep(4500);
+            Sleep(6500);
             system("cls");
             displayMenu(freeze, fovEnabled, fastMenuEnabled, hideNameEnabled, desiredFOV);
         }
