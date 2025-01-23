@@ -197,7 +197,7 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |           Fast Menu           |
 +-------------------------------+
 )";
-    std::cout << "Description: No delay to open menus or chat after realm switches." << std::endl;
+    std::cout << "Description: Allows you to immediantly open any menu after switching realms." << std::endl;
     std::cout << "Address: Cubic.exe" << std::endl;
     std::cout << "Offsets: { 0x00C7EF88 }" << std::endl;
     std::cout << R"(
