@@ -124,11 +124,11 @@ FOV & Infinite Jump must be re-enabled after switching realms.
 
     if (hideNameEnabled) {
         SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
-        std::cout << "| Hide Name      | F4 | [Enabled]" << std::endl;
+        std::cout << "| Hide Names     | F4 | [Enabled]" << std::endl;
     }
     else {
         SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY);
-        std::cout << "| Hide Name      | F4 | [Disabled]" << std::endl;
+        std::cout << "| Hide Names     | F4 | [Disabled]" << std::endl;
     }
 
     // Restore original attributes
@@ -205,7 +205,7 @@ void displayAddresses(DWORD gameBaseAddress, DWORD pointsAddress, DWORD customAd
 |           Name Hide           |
 +-------------------------------+
 )";
-    std::cout << "Description: Automatically hide your name when entering a new realm." << std::endl;
+    std::cout << "Description: Automatically hides names when entering a new realm." << std::endl;
     std::cout << "Address: Cubic.exe" << std::endl;
     std::cout << "Offsets: { 0x1C00448 }" << std::endl;
 
@@ -341,10 +341,10 @@ int main() {
             if (injectEnabled) {
                 injectThread = std::thread(injectMemory, processHandle, gameBaseAddress, std::ref(injectEnabled));
                 injectThread.detach();
-                std::cout << "Hide Name Enabled" << std::endl;
+                std::cout << "Hide Names Enabled" << std::endl;
             }
             else {
-                std::cout << "Hide Name Disabled" << std::endl;
+                std::cout << "Hide Names Disabled" << std::endl;
             }
             Sleep(700);
             system("cls");
