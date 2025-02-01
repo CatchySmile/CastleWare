@@ -23,7 +23,7 @@ The first public & open source external cheat for the game Cubic Castles.
 - **Fast Menus**: Allows you to immediately open any menu after switching realms.
 - **Hide Name**: Automatically hide your name when entering a new realm.
 - **Noclip**: Allows you to move through objects.
-- **Player Size**: Change the size of your player character.
+- **Player Size**: Change the size of your player character locally, this size will affect your hitbox size.
 
 ## Getting Started
 
