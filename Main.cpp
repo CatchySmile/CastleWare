@@ -283,12 +283,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         hHideNameCheckbox = CreateWindow(TEXT("button"), TEXT("Hide Names"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 110, 150, 20, hWnd, (HMENU)4, hInst, NULL);
         hNoclipCheckbox = CreateWindow(TEXT("button"), TEXT("Noclip"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 140, 150, 20, hWnd, (HMENU)5, hInst, NULL);
         hPlayerSizeCheckbox = CreateWindow(TEXT("button"), TEXT("Player Size"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 170, 150, 20, hWnd, (HMENU)6, hInst, NULL);
-        hPlayerSizeDropdown = CreateWindow(TEXT("combobox"), NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 180, 170, 100, 100, hWnd, (HMENU)7, hInst, NULL);
-        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Size: Tiny"));
-        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Size: Normal"));
-        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Size: Large"));
-        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Size: Titan"));
-        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Size: Max"));
+        hPlayerSizeDropdown = CreateWindow(TEXT("combobox"), NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 180, 170, 100, 160, hWnd, (HMENU)7, hInst, NULL);
+        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Tiny"));
+        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Normal"));
+        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Large"));
+        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Titan"));
+        SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Gigantic"));
         SendMessage(hPlayerSizeDropdown, CB_SETCURSEL, 1, 0); // Default to Normal size
         hFooter = CreateWindow(TEXT("static"), TEXT("INS to toggle"), WS_VISIBLE | WS_CHILD, 20, 220, 250, 20, hWnd, NULL, hInst, NULL);
         hFooter = CreateWindow(TEXT("static"), TEXT("Github.com/CatchySmile/CastleWare"), WS_VISIBLE | WS_CHILD, 20, 236, 250, 20, hWnd, NULL, hInst, NULL);
@@ -340,7 +340,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 playerSizeValue = 1065353216; // Normal
                 break;
             case 2:
-                playerSizeValue = 1070000000; // Large
+                playerSizeValue = 1073000000; // Large
                 break;
             case 3:
                 playerSizeValue = 1085000000; // Titan
