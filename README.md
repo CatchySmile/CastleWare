@@ -1,8 +1,8 @@
-# CastleWare - Cubic Castles External Cheat.
+# CastleWare - Cubic Castles External Cheat
 
 The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/baf41ccd-a1ad-4264-b14d-d1d8524cd3eb)
+![image](https://github.com/user-attachments/assets/096dfcbe-9ee2-4de5-a0c8-ea7caf1eef6a)
 
 
 ## Table of Contents
@@ -19,9 +19,11 @@ The first public & open source external cheat for the game Cubic Castles.
 ## Features
 
 - **FOV Changer**: Exactly what it sounds like, an FOV changer.
-- **Infinite Jump**: Allows you to infinitly jump in the game.
-- **Fast Menus**: Allows you to immediantly open any menu after switching realms.
+- **Infinite Jump**: Allows you to infinitely jump in the game.
+- **Fast Menus**: Allows you to immediately open any menu after switching realms.
 - **Hide Name**: Automatically hide your name when entering a new realm.
+- **Noclip**: Allows you to move through objects.
+- **Player Size**: Change the size of your player character.
 
 ## Getting Started
 
@@ -38,23 +40,13 @@ The first public & open source external cheat for the game Cubic Castles.
 
 ### Usage
 
-1. Run the program. (Run with elevated permissions if it doesnt work.)
-3. Use the function keys to enable or disable features:
-    - **F1**: Toggle FOV Changer
-    - **F2**: Toggle Infinite Jump
-    - **F3**: Toggle Fast Menus
-    - **F4**: Toggle Hide Name
-    - **F5**: Toggle NoClip
-    - **F6**: Toggle NoCollide
-      
-    - **F7**: Show addresses and offsets and description
-    - **F8**: Quit the program
+1. Run the program. (Run with elevated permissions if it doesn't work.)
+2. ???
+3. Profit?
 
 ## Reporting Issues
 
-If you encounter any errors or issues, please report them at [https://github.com/CatchySmile/CastleWare](https://github.com/CatchySmile/CastleWare)
-
-.
+If you encounter any errors or issues, please report them at [https://github.com/CatchySmile/CastleWare](https://github.com/CatchySmile/CastleWare).
 
 ## Contributing
 
@@ -63,4 +55,3 @@ Contributions are welcome! Please fork the repository and submit a pull request 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
