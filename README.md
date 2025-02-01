@@ -18,8 +18,8 @@ The first public & open source external cheat for the game Cubic Castles.
 
 ## Features
 
-- **FOV Changer**: Exactly what it sounds like, an FOV changer.
 - **Infinite Jump**: Allows you to infinitely jump in the game.
+- **FOV Changer**: Exactly what it sounds like, an FOV changer.
 - **Fast Menus**: Allows you to immediately open any menu after switching realms.
 - **Hide Name**: Automatically hide your name when entering a new realm.
 - **Noclip**: Allows you to move through objects.
