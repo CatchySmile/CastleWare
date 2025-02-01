@@ -43,6 +43,8 @@ The first public & open source external cheat for the game Cubic Castles.
     - **F2**: Toggle Infinite Jump
     - **F3**: Toggle Fast Menus
     - **F4**: Toggle Hide Name
+    - **F5**: Toggle NoClip
+    - **F6**: Toggle NoCollide
       
     - **F7**: Show addresses and offsets and description
     - **F8**: Quit the program
