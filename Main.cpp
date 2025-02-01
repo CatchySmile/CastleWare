@@ -89,7 +89,7 @@ void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled
 }
 
 void maintainNoclip(HANDLE processHandle, DWORD address, bool& noclipEnabled) {
-    int noclipValue = 1010000000; // This is just our player size fr
+    int noclipValue = 1008000000; // This is just our player size fr
     int normalValue = 1065353216; // tiny mode: 1056964608
     while (noclipEnabled) {
         WriteProcessMemory(processHandle, (LPVOID)(address), &noclipValue, sizeof(noclipValue), 0);
@@ -304,7 +304,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         HDC hdc = (HDC)wParam;
         RECT rc;
         GetClientRect(hWnd, &rc);
-        FillRect(hdc, &rc, hbrBkgnd);
+        HBRUSH hbrTransparent = CreateSolidBrush(RGB(0, 0, 0));
+        SetBkMode(hdc, TRANSPARENT);
+        FillRect(hdc, &rc, hbrTransparent);
+        DeleteObject(hbrTransparent);
         return 1;
     }
     case WM_CTLCOLORDLG:
