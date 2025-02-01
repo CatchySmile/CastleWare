@@ -14,6 +14,7 @@ void injectMemory(HANDLE processHandle, DWORD baseAddress, bool& injectEnabled);
 void maintainFOV(HANDLE processHandle, DWORD address, bool& fovEnabled);
 void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled);
 void maintainNoclip(HANDLE processHandle, DWORD address, bool& noclipEnabled);
+void maintainNoCollision(HANDLE processHandle, DWORD address, bool& noCollisionEnabled, int& playerSizeValue);
 void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEnabled, int& playerSizeValue);
 void freezeValue(HANDLE processHandle, DWORD address, int value, bool& freeze);
 void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress, bool& freeze, std::thread& freezeThread);
@@ -22,14 +23,15 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ToggleOption(bool& option, HWND checkbox);
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
+
 // Global variables
 HINSTANCE hInst;
-HWND hWndMain, hFreezeCheckbox, hFovCheckbox, hFastMenuCheckbox, hHideNameCheckbox, hNoclipCheckbox, hPlayerSizeCheckbox, hFovInput, hPlayerSizeDropdown, hFooter;
-bool freeze = false, fovEnabled = false, fastMenuEnabled = false, hideNameEnabled = false, noclipEnabled = false, playerSizeEnabled = false;
+HWND hWndMain, hFreezeCheckbox, hFovCheckbox, hFastMenuCheckbox, hHideNameCheckbox, hNoclipCheckbox, hNoCollisionCheckbox, hPlayerSizeCheckbox, hFovInput, hPlayerSizeDropdown, hFooter;
+bool freeze = false, fovEnabled = false, fastMenuEnabled = false, hideNameEnabled = false, noclipEnabled = false, noCollisionEnabled = false, playerSizeEnabled = false;
 int playerSizeValue = 1065353216; // Default to Normal size
 DWORD gameBaseAddress = 0, pointsAddress = 0, customAddress = 0;
 HANDLE processHandle = NULL;
-std::thread freezeThread, fovThread, fastMenuThread, injectThread, noclipThread, playerSizeThread;
+std::thread freezeThread, fovThread, fastMenuThread, injectThread, noclipThread, noCollisionThread, playerSizeThread;
 HHOOK hKeyboardHook;
 
 DWORD GetModuleBaseAddress(TCHAR* lpszModuleName, DWORD pID) {
@@ -98,6 +100,15 @@ void maintainNoclip(HANDLE processHandle, DWORD address, bool& noclipEnabled) {
     WriteProcessMemory(processHandle, (LPVOID)(address), &normalValue, sizeof(normalValue), 0);
 }
 
+void maintainNoCollision(HANDLE processHandle, DWORD address, bool& noCollisionEnabled, int& playerSizeValue) {
+    int noCollisionValue = 1;
+    while (noCollisionEnabled) {
+        WriteProcessMemory(processHandle, (LPVOID)(address), &noCollisionValue, sizeof(noCollisionValue), 0);
+        Sleep(100);
+    }
+    WriteProcessMemory(processHandle, (LPVOID)(address), &playerSizeValue, sizeof(playerSizeValue), 0);
+}
+
 void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEnabled, int& playerSizeValue) {
     while (playerSizeEnabled) {
         int selectedIndex = SendMessage(hPlayerSizeDropdown, CB_GETCURSEL, 0, 0);
@@ -128,7 +139,6 @@ void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEna
 void ToggleOption(bool& option, HWND checkbox) {
     option = !option;
     SendMessage(checkbox, BM_SETCHECK, option ? BST_CHECKED : BST_UNCHECKED, 0);
-    // Add your logic to enable/disable the feature here
     if (option) {
         if (checkbox == hFovCheckbox) {
             fovThread = std::thread(maintainFOV, processHandle, pointsAddress, std::ref(fovEnabled));
@@ -153,6 +163,13 @@ void ToggleOption(bool& option, HWND checkbox) {
             noclipThread = std::thread(maintainNoclip, processHandle, noclipAddress, std::ref(noclipEnabled));
             noclipThread.detach();
         }
+        else if (checkbox == hNoCollisionCheckbox) {
+            DWORD noCollisionBaseAddress = NULL;
+            ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &noCollisionBaseAddress, sizeof(noCollisionBaseAddress), NULL);
+            DWORD noCollisionAddress = noCollisionBaseAddress + noclipOffset;
+            noCollisionThread = std::thread(maintainNoCollision, processHandle, noCollisionAddress, std::ref(noCollisionEnabled), std::ref(playerSizeValue));
+            noCollisionThread.detach();
+        }
         else if (checkbox == hPlayerSizeCheckbox) {
             DWORD playerSizeBaseAddress = NULL;
             ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &playerSizeBaseAddress, sizeof(playerSizeBaseAddress), NULL);
@@ -162,7 +179,6 @@ void ToggleOption(bool& option, HWND checkbox) {
         }
     }
 }
-
 
 void freezeValue(HANDLE processHandle, DWORD address, int value, bool& freeze) {
     while (freeze) {
@@ -207,9 +223,15 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
         if (noclipThread.joinable()) {
             noclipThread.join();
         }
+        if (noCollisionThread.joinable()) {
+            noCollisionThread.join();
+        }
         if (playerSizeThread.joinable()) {
             playerSizeThread.join();
         }
+        if (freezeThread.joinable()) {
+            freezeThread.join();
+            }
 
         // Reattach and reload addresses
         HWND hGameWindow = FindWindow(NULL, "Cubic");
@@ -230,7 +252,6 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
             processHandle = NULL;
         }
 
-        // Re-enable options if they were enabled before
         if (fovEnabled) {
             fovThread = std::thread(maintainFOV, processHandle, pointsAddress, std::ref(fovEnabled));
             fovThread.detach();
@@ -255,6 +276,13 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
             noclipThread = std::thread(maintainNoclip, processHandle, noclipAddress, std::ref(noclipEnabled));
             noclipThread.detach();
         }
+        if (noCollisionEnabled) {
+            DWORD noCollisionBaseAddress = NULL;
+            ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &noCollisionBaseAddress, sizeof(noCollisionBaseAddress), NULL);
+            DWORD noCollisionAddress = noCollisionBaseAddress + noclipOffset;
+            noCollisionThread = std::thread(maintainNoCollision, processHandle, noCollisionAddress, std::ref(noCollisionEnabled), std::ref(playerSizeValue));
+            noCollisionThread.detach();
+        }
         if (playerSizeEnabled) {
             DWORD playerSizeBaseAddress = NULL;
             ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &playerSizeBaseAddress, sizeof(playerSizeBaseAddress), NULL);
@@ -263,10 +291,12 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
             playerSizeThread.detach();
         }
 
-        Sleep(333); // Sleep for a third a second before rechecking
+        Sleep(733);
+        if (freezeThread.joinable()) {
+            freezeThread.join();
+        }
     }
 }
-
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     static HBRUSH hbrBkgnd = CreateSolidBrush(RGB(0, 0, 0)); // Black background
@@ -282,6 +312,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         hFastMenuCheckbox = CreateWindow(TEXT("button"), TEXT("Fast Menus"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 80, 150, 20, hWnd, (HMENU)3, hInst, NULL);
         hHideNameCheckbox = CreateWindow(TEXT("button"), TEXT("Hide Names"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 110, 150, 20, hWnd, (HMENU)4, hInst, NULL);
         hNoclipCheckbox = CreateWindow(TEXT("button"), TEXT("Noclip"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 140, 150, 20, hWnd, (HMENU)5, hInst, NULL);
+        hNoCollisionCheckbox = CreateWindow(TEXT("button"), TEXT("NoCollision"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 180, 140, 150, 20, hWnd, (HMENU)8, hInst, NULL);
         hPlayerSizeCheckbox = CreateWindow(TEXT("button"), TEXT("Player Size"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 170, 150, 20, hWnd, (HMENU)6, hInst, NULL);
         hPlayerSizeDropdown = CreateWindow(TEXT("combobox"), NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 180, 170, 100, 160, hWnd, (HMENU)7, hInst, NULL);
         SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Tiny"));
@@ -329,7 +360,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         case 5:
             ToggleOption(noclipEnabled, hNoclipCheckbox);
             break;
-        case 6:
+        case 6: {
             ToggleOption(playerSizeEnabled, hPlayerSizeCheckbox);
             int selectedIndex = SendMessage(hPlayerSizeDropdown, CB_GETCURSEL, 0, 0);
             switch (selectedIndex) {
@@ -355,6 +386,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 DWORD playerSizeAddress = playerSizeBaseAddress + noclipOffset;
                 playerSizeThread = std::thread(maintainPlayerSize, processHandle, playerSizeAddress, std::ref(playerSizeEnabled), std::ref(playerSizeValue));
                 playerSizeThread.detach();
+            }
+            break;
+        }
+        case 8:
+            ToggleOption(noCollisionEnabled, hNoCollisionCheckbox);
+            if (noCollisionEnabled) {
+                DWORD noCollisionBaseAddress = NULL;
+                ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &noCollisionBaseAddress, sizeof(noCollisionBaseAddress), NULL);
+                DWORD noCollisionAddress = noCollisionBaseAddress + noclipOffset;
+                noCollisionThread = std::thread(maintainNoCollision, processHandle, noCollisionAddress, std::ref(noCollisionEnabled), std::ref(playerSizeValue));
+                noCollisionThread.detach();
+            }
+            else {
+                DWORD noCollisionBaseAddress = NULL;
+                ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressNoclip), &noCollisionBaseAddress, sizeof(noCollisionBaseAddress), NULL);
+                DWORD noCollisionAddress = noCollisionBaseAddress + noclipOffset;
+                WriteProcessMemory(processHandle, (LPVOID)(noCollisionAddress), &playerSizeValue, sizeof(playerSizeValue), 0);
             }
             break;
         }
@@ -390,7 +438,7 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     hInst = hInstance;
-    WNDCLASSEX wcex;
+    WNDCLASSEX wcex = { 0 }; // Initialize all members to zero
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = WndProc;
@@ -438,6 +486,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     fastMenuEnabled = false;
     hideNameEnabled = false;
     noclipEnabled = false;
+    noCollisionEnabled = false;
     playerSizeEnabled = false;
     if (freezeThread.joinable()) {
         freezeThread.join();
@@ -453,6 +502,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     }
     if (noclipThread.joinable()) {
         noclipThread.join();
+    }
+    if (noCollisionThread.joinable()) {
+        noCollisionThread.join();
     }
     if (playerSizeThread.joinable()) {
         playerSizeThread.join();
