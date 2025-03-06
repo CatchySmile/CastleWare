@@ -1,6 +1,6 @@
-#include <vector>
-
 #pragma once
+
+#include <vector>
 
 // Offsets for the "Hide Name" feature
 const DWORD hideNameOffset = 0x1C0044;
@@ -17,3 +17,11 @@ const std::vector<DWORD> customOffsets{ 0x19C, 0x1D8, 0x1AC, 0x1A4, 0x198, 0x34C
 
 // Fast Menu offset
 const DWORD fastMenuOffset = 0x00C7EF88;
+
+// Noclip offsets
+const DWORD offsetGameToBaseAddressNoclip = 0x002F7A28;
+const DWORD noclipOffset = 0x4AC;
+
+// Perm offsets
+const DWORD offsetGameToBaseAddressPerm = 0x002FFDEC;
+const std::vector<DWORD> permOffset{ 0x70, 0xA8, 0x264, 0x1B4, 0x1A0, 0x40, 0x394 };
