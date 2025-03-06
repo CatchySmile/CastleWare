@@ -7,6 +7,18 @@
 #include <thread>
 #include "offsets.h"
 
+// Global variables
+HINSTANCE hInst;
+HWND hWndMain, hFreezeCheckbox, hFovCheckbox, hFastMenuCheckbox, hHideNameCheckbox, hNoclipCheckbox, hNoCollisionCheckbox, hPlayerSizeCheckbox, hFovInput, hPlayerSizeDropdown, hFooter;
+HWND hPermSpoofCheckbox, hPermSpoofDropdown;
+std::thread permSpoofThread, freezeThread, fovThread, fastMenuThread, injectThread, noclipThread, noCollisionThread, playerSizeThread;
+HHOOK hKeyboardHook;
+HANDLE processHandle = NULL;
+bool permSpoofEnabled = false, freeze = false, fovEnabled = false, fastMenuEnabled = false, hideNameEnabled = false, noclipEnabled = false, noCollisionEnabled = false, playerSizeEnabled = false;
+int playerSizeValue = 1065353216; // Default to Normal size
+int permSpoofValue = 0;
+DWORD gameBaseAddress = 0, pointsAddress = 0, customAddress = 0;
+
 // Function prototypes
 DWORD GetModuleBaseAddress(TCHAR* lpszModuleName, DWORD pID);
 DWORD getAddressWithOffsets(HANDLE processHandle, DWORD baseAddress, const std::vector<DWORD>& offsets);
@@ -16,24 +28,17 @@ void maintainFastMenu(HANDLE processHandle, DWORD address, bool& fastMenuEnabled
 void maintainNoclip(HANDLE processHandle, DWORD address, bool& noclipEnabled);
 void maintainNoCollision(HANDLE processHandle, DWORD address, bool& noCollisionEnabled, int& playerSizeValue);
 void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEnabled, int& playerSizeValue);
+void maintainPermSpoof(HANDLE processHandle, DWORD address, bool& permSpoofEnabled, int& permSpoofValue);
 void freezeValue(HANDLE processHandle, DWORD address, int value, bool& freeze);
 void reloadAddresses(HANDLE processHandle, DWORD gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress, bool& freeze, std::thread& freezeThread);
 void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& pointsAddress, DWORD& customAddress, bool& freeze, std::thread& freezeThread);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ToggleOption(bool& option, HWND checkbox);
+void TogglePermSpoofOption(bool& option, HWND checkbox, HWND dropdown);
 LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow);
 
-
-// Global variables
-HINSTANCE hInst;
-HWND hWndMain, hFreezeCheckbox, hFovCheckbox, hFastMenuCheckbox, hHideNameCheckbox, hNoclipCheckbox, hNoCollisionCheckbox, hPlayerSizeCheckbox, hFovInput, hPlayerSizeDropdown, hFooter;
-bool freeze = false, fovEnabled = false, fastMenuEnabled = false, hideNameEnabled = false, noclipEnabled = false, noCollisionEnabled = false, playerSizeEnabled = false;
-int playerSizeValue = 1065353216; // Default to Normal size
-DWORD gameBaseAddress = 0, pointsAddress = 0, customAddress = 0;
-HANDLE processHandle = NULL;
-std::thread freezeThread, fovThread, fastMenuThread, injectThread, noclipThread, noCollisionThread, playerSizeThread;
-HHOOK hKeyboardHook;
-
+// Function implementations
 DWORD GetModuleBaseAddress(TCHAR* lpszModuleName, DWORD pID) {
     DWORD dwModuleBaseAddress = 0;
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pID);
@@ -126,7 +131,7 @@ void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEna
             playerSizeValue = 1085000000; // Titan
             break;
         case 4:
-            playerSizeValue = 1125000000; // Max
+            playerSizeValue = 1125000000; // Max/Gigantic
             break;
         }
         WriteProcessMemory(processHandle, (LPVOID)(address), &playerSizeValue, sizeof(playerSizeValue), 0);
@@ -134,6 +139,15 @@ void maintainPlayerSize(HANDLE processHandle, DWORD address, bool& playerSizeEna
     }
     int normalValue = 1065353216;
     WriteProcessMemory(processHandle, (LPVOID)(address), &normalValue, sizeof(normalValue), 0);
+}
+
+void maintainPermSpoof(HANDLE processHandle, DWORD address, bool& permSpoofEnabled, int& permSpoofValue) {
+    int zeroValue = 0;
+    while (permSpoofEnabled) {
+        WriteProcessMemory(processHandle, (LPVOID)(address), &permSpoofValue, sizeof(permSpoofValue), 0);
+        Sleep(100);
+    }
+    WriteProcessMemory(processHandle, (LPVOID)(address), &zeroValue, sizeof(zeroValue), 0);
 }
 
 void ToggleOption(bool& option, HWND checkbox) {
@@ -177,6 +191,33 @@ void ToggleOption(bool& option, HWND checkbox) {
             playerSizeThread = std::thread(maintainPlayerSize, processHandle, playerSizeAddress, std::ref(playerSizeEnabled), std::ref(playerSizeValue));
             playerSizeThread.detach();
         }
+    }
+}
+
+void TogglePermSpoofOption(bool& option, HWND checkbox, HWND dropdown) {
+    option = !option;
+    SendMessage(checkbox, BM_SETCHECK, option ? BST_CHECKED : BST_UNCHECKED, 0);
+    int selectedIndex = SendMessage(dropdown, CB_GETCURSEL, 0, 0);
+    switch (selectedIndex) {
+    case 0:
+        permSpoofValue = 0; // No perm
+        break;
+    case 1:
+        permSpoofValue = 65536; // Has plot
+        break;
+    case 2:
+        permSpoofValue = 16842752; // Has perm
+        break;
+    case 3:
+        permSpoofValue = 16843009; // Owner
+        break;
+    }
+    if (option) {
+        DWORD permBaseAddress = NULL;
+        ReadProcessMemory(processHandle, (LPVOID)(gameBaseAddress + offsetGameToBaseAddressPerm), &permBaseAddress, sizeof(permBaseAddress), NULL);
+        DWORD permAddress = getAddressWithOffsets(processHandle, permBaseAddress, permOffset);
+        permSpoofThread = std::thread(maintainPermSpoof, processHandle, permAddress, std::ref(permSpoofEnabled), std::ref(permSpoofValue));
+        permSpoofThread.detach();
     }
 }
 
@@ -231,7 +272,7 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
         }
         if (freezeThread.joinable()) {
             freezeThread.join();
-            }
+        }
 
         // Reattach and reload addresses
         HWND hGameWindow = FindWindow(NULL, "Cubic");
@@ -297,7 +338,6 @@ void reattachAndReload(HANDLE& processHandle, DWORD& gameBaseAddress, DWORD& poi
         }
     }
 }
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     static HBRUSH hbrBkgnd = CreateSolidBrush(RGB(0, 0, 0)); // Black background
     static HBRUSH hbrGray = CreateSolidBrush(RGB(30, 30, 30)); // gray background for text
@@ -321,9 +361,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
         SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Titan"));
         SendMessage(hPlayerSizeDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Gigantic"));
         SendMessage(hPlayerSizeDropdown, CB_SETCURSEL, 1, 0); // Default to Normal size
-        hFooter = CreateWindow(TEXT("static"), TEXT("INS to toggle"), WS_VISIBLE | WS_CHILD, 20, 220, 250, 20, hWnd, NULL, hInst, NULL);
-        hFooter = CreateWindow(TEXT("static"), TEXT("Github.com/CatchySmile/CastleWare"), WS_VISIBLE | WS_CHILD, 20, 236, 250, 20, hWnd, NULL, hInst, NULL);
+        hPermSpoofCheckbox = CreateWindow(TEXT("button"), TEXT("Perm Spoof"), WS_VISIBLE | WS_CHILD | BS_CHECKBOX, 20, 200, 150, 20, hWnd, (HMENU)9, hInst, NULL);
+        hPermSpoofDropdown = CreateWindow(TEXT("combobox"), NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST, 180, 200, 100, 160, hWnd, (HMENU)9, hInst, NULL);
+        SendMessage(hPermSpoofDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("No perm"));
+        SendMessage(hPermSpoofDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Has plot"));
+        SendMessage(hPermSpoofDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Has perm"));
+        SendMessage(hPermSpoofDropdown, CB_ADDSTRING, 0, (LPARAM)TEXT("Owner"));
+        SendMessage(hPermSpoofDropdown, CB_SETCURSEL, 0, 0); // Default to No perm
+        hFooter = CreateWindow(TEXT("static"), TEXT("INS to toggle"), WS_VISIBLE | WS_CHILD, 20, 250, 250, 20, hWnd, NULL, hInst, NULL);
+        hFooter = CreateWindow(TEXT("static"), TEXT("Github.com/CatchySmile/CastleWare"), WS_VISIBLE | WS_CHILD, 20, 266, 250, 20, hWnd, NULL, hInst, NULL);
         break;
+
     case WM_CTLCOLORSTATIC:
     case WM_CTLCOLORBTN: {
         HDC hdcStatic = (HDC)wParam;
@@ -377,7 +425,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 playerSizeValue = 1085000000; // Titan
                 break;
             case 4:
-                playerSizeValue = 1125000000; // Max
+                playerSizeValue = 1125000000; // Max/Gigantic
                 break;
             }
             if (playerSizeEnabled) {
@@ -405,8 +453,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 WriteProcessMemory(processHandle, (LPVOID)(noCollisionAddress), &playerSizeValue, sizeof(playerSizeValue), 0);
             }
             break;
+        case 9:
+            TogglePermSpoofOption(permSpoofEnabled, hPermSpoofCheckbox, hPermSpoofDropdown);
+            break;
         }
         break;
+
     case WM_DESTROY:
         DeleteObject(hbrBkgnd);
         DeleteObject(hbrGray);
@@ -453,8 +505,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
 
     RegisterClassEx(&wcex);
-
-    hWndMain = CreateWindow(TEXT("MainWindowClass"), TEXT("CastleWare v1.0"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 300, 300, NULL, NULL, hInstance, NULL);
+    // Main window
+    hWndMain = CreateWindow(TEXT("MainWindowClass"), TEXT("CastleWare v1.1"), WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 300, 340, NULL, NULL, hInstance, NULL);
     if (!hWndMain) {
         return FALSE;
     }
@@ -488,6 +540,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
     noclipEnabled = false;
     noCollisionEnabled = false;
     playerSizeEnabled = false;
+
     if (freezeThread.joinable()) {
         freezeThread.join();
     }
