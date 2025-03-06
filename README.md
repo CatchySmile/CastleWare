@@ -2,7 +2,7 @@
 
 The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/95b2f548-67a5-4a60-92ad-a998ef9dbfc8)
+![image](https://github.com/user-attachments/assets/f7cf6689-4ae4-49eb-8da1-dd61c32b8fb7)
 
 
 After switching a realm, move your camera to fix any broken features
@@ -24,8 +24,10 @@ After switching a realm, move your camera to fix any broken features
 - **FOV Changer**: Exactly what it sounds like, an FOV changer.
 - **Fast Menus**: Allows you to immediately open any menu after switching realms.
 - **Hide Names**: Automatically hide your name when entering a new realm.
-- **Noclip**: Allows you to move through objects.
+- **NoClip**: Allows you to move through objects.
+- **NoCollide**: Similar to NoClip however it allows you to rise and fall through terrain aswell.
 - **Player Size**: Change the size of your player character locally, this size will affect your hitbox size.
+- **Permission Spoofing**: Spoof having break/build and optionally owner permissions in any realm
 
 ## Getting Started
 
@@ -38,7 +40,7 @@ After switching a realm, move your camera to fix any broken features
 
 1. Clone the repository:
 2. Open the project in Visual Studio 2022.
-3. Build the project to ensure all dependencies are correctly configured.
+3. Build the release and ensure all dependencies are correctly configured.
 
 ### Usage
 
