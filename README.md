@@ -2,11 +2,12 @@
 
 The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/f7cf6689-4ae4-49eb-8da1-dd61c32b8fb7)
+<img width="245" height="160" alt="image" src="https://github.com/user-attachments/assets/bbee7353-9aa8-4f37-8257-85ca9840013c" />
+
 
 
 After switching a realm, move your camera to fix any broken features.
-Offsets are likely outdated..
+Offsets may be outdated depending on game updates.
 
 ## Table of Contents
 
@@ -22,14 +23,8 @@ Offsets are likely outdated..
 ## Features
 
 - **Infinite Jump**: Allows you to infinitely jump in the game.
-- **FOV Changer**: Exactly what it sounds like, an FOV changer.
-- **Fast Menus**: Allows you to immediately open any menu after switching realms.
-- **Hide Names**: Automatically hide your name when entering a new realm.
 - **NoClip**: Allows you to move through objects.
 - **NoCollide**: Similar to NoClip however it allows you to rise and fall through terrain aswell.
-- **Player Size**: Change the size of your player character locally, this size will affect your hitbox size.
-- **Permission Spoofing**: Spoof having break/build and optionally owner permissions in any realm
-
 ## Getting Started
 
 ### Prerequisites
