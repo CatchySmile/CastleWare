@@ -25,10 +25,10 @@ Offsets may be outdated depending on game updates.
 - **Infinite Jump**: Allows you to infinitely jump in the game.
 - **NoClip**: Allows you to move through objects.
 - **NoCollide**: Similar to NoClip however it allows you to rise and fall through terrain aswell.
-- 
-## Getting Started
+
 - Bind any feature to a key/key combo
 - Drag the imgui around via the top bar text "Cubic External"
+## Getting Started
 
 ### Prerequisites
 
