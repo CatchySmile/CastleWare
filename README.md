@@ -1,4 +1,4 @@
-# CastleWare - Cubic Castles External Cheat
+# CastleWare  -  Cubic Castles Cheat
 
 The first public & open source external cheat for the game Cubic Castles.
 
