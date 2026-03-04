@@ -1,12 +1,15 @@
-# CastleWare - Cubic Castles External Cheat
+# CastleWare  -  Cubic Castles Cheat
 
 The first public & open source external cheat for the game Cubic Castles.
 
-![image](https://github.com/user-attachments/assets/f7cf6689-4ae4-49eb-8da1-dd61c32b8fb7)
+<img width="265" height="352" alt="image" src="https://github.com/user-attachments/assets/e1d21689-5996-452c-8208-537e65b25e02" />
+<img width="265" height="353" alt="image" src="https://github.com/user-attachments/assets/b34a9817-1ca3-422c-bc23-b58d3466517c" />
+<img width="255" height="352" alt="image" src="https://github.com/user-attachments/assets/b2902f2a-9883-4887-be36-aa6dac2c8eab" />
 
 
-After switching a realm, move your camera to fix any broken features.
-Offsets are likely outdated..
+
+
+Offsets may be outdated depending on game updates.
 
 ## Table of Contents
 
@@ -22,14 +25,13 @@ Offsets are likely outdated..
 ## Features
 
 - **Infinite Jump**: Allows you to infinitely jump in the game.
-- **FOV Changer**: Exactly what it sounds like, an FOV changer.
-- **Fast Menus**: Allows you to immediately open any menu after switching realms.
-- **Hide Names**: Automatically hide your name when entering a new realm.
 - **NoClip**: Allows you to move through objects.
 - **NoCollide**: Similar to NoClip however it allows you to rise and fall through terrain aswell.
-- **Player Size**: Change the size of your player character locally, this size will affect your hitbox size.
-- **Permission Spoofing**: Spoof having break/build and optionally owner permissions in any realm
 
+- **Account Manager** Allows you to add accounts and log into them very easily.
+
+- Bind any feature to a key/key combo
+- Drag the imgui around via the top bar text "Cubic External"
 ## Getting Started
 
 ### Prerequisites
