@@ -9,7 +9,6 @@ The first public & open source external cheat for the game Cubic Castles.
 
 
 
-After switching a realm, move your camera to fix any broken features.
 Offsets may be outdated depending on game updates.
 
 ## Table of Contents
